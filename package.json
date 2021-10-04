@@ -8,11 +8,10 @@
   },
   "dependencies": {
     "@hyperswarm/dht": "next",
-    "@whitetrefoil/koa-http-proxy": "^2.0.0",
     "express": "^4.17.1",
     "hi-base32": "latest",
+    "http-cache": "^0.3.1",
     "http-proxy": "^1.18.1",
-    "http-proxy-middleware": "^2.0.1",
     "hypercore-crypto": "^2.3.0",
     "pump": "^3.0.0"
   },
