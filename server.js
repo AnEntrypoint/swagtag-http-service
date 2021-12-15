@@ -1,28 +1,24 @@
-var http = require('http'),
-    httpProxy = require('http-proxy');
+const http = require('http');
+const httpProxy = require('http-proxy');
 const DHT = require("@hyperswarm/dht");
-var net = require("net");
-var pump = require("pump");
-var agent = new http.Agent({ maxSockets: Number.MAX_VALUE });
-var b32 = require("hi-base32");
+const net = require("net");
+const pump = require("pump");
+const agent = new http.Agent({ maxSockets: Number.MAX_VALUE });
+const b32 = require("hi-base32");
 let mod = 0;
 const tunnels = {};
   
-//
-// Create a proxy server with custom application logic
-//
+/*const bootstrap = new DHT({
+  ephemeral: true
+})*/
+
 var proxy = httpProxy.createProxyServer({
   ws:true,
   agent: agent,
   timeout:360000
 });
 
-//proxy.on('proxyReq', function(proxyReq, req, res, options) {
-  //proxyReq.setHeader('X-Special-Proxy-Header', 'foobar');
-//});
-
-const node = new DHT({});
-setInterval(()=>{console.log(node.remoteAddress())},10000)
+const node = new DHT({/*bootstrap: ['code.southcoast.ga:49737']*/});
 var server = http.createServer(function(req, res) {
   try {
   const split = req.headers.host.split('.');
