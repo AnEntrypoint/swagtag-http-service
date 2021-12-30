@@ -8,12 +8,16 @@
   },
   "dependencies": {
     "@hyperswarm/dht": "next",
+    "dns2": "^2.0.1",
     "express": "^4.17.1",
     "hi-base32": "latest",
     "http-cache": "^0.3.1",
     "http-proxy": "^1.18.1",
     "hypercore-crypto": "^2.3.0",
-    "pump": "^3.0.0"
+    "node-cache": "^5.1.2",
+    "pm2": "^5.1.2",
+    "pump": "^3.0.0",
+    "web3": "^1.6.1"
   },
   "engines": {
     "node": "12.x"
