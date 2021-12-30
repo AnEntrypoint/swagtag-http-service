@@ -9,3 +9,5 @@ keys
 live
 renewal
 renewal-hooks
+letsencrypt.log
+txt
