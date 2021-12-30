@@ -11,3 +11,4 @@ renewal
 renewal-hooks
 letsencrypt.log
 txt
+package-lock.json
