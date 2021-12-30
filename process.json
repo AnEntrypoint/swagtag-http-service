@@ -1,0 +1,7 @@
+{
+  "watch": ["server"],
+  "ignore_watch" : ["node_modules", "txt"],
+  "watch_options": {
+    "followSymlinks": false
+  }
+}
