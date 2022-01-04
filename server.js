@@ -29,7 +29,6 @@ var proxy = httpProxy.createProxyServer({
 });
 const lookup = require('./lookup.js');
 const node = new DHT({/*bootstrap: ['code.southcoast.ga:49737']*/ });
-const cache = {};
 
 const closeOther = (local, other) => {
   local.on('error',  () => { other.end() })
@@ -37,29 +36,57 @@ const closeOther = (local, other) => {
   local.on('end',  () => { other.end() })
 }
 
-const getKey = async(name)=>{
+const getKey = async(name, question, contract, host)=>{
   let publicKey;
   let decoded = '';
   try {decoded = b32.decode.asBytes(name.toUpperCase())} catch (e) { }
   if (decoded.length == 32) {
     publicKey = Buffer.from(decoded);
   } else {
-    const lookupRes = await lookup(name);
+    const lookupRes = await lookup(name, question, contract, host)||'';
+    console.log(lookupRes);
     publicKey = Buffer.from(b32.decode.asBytes(lookupRes.toUpperCase()));
   }
   return publicKey;
 }
 
+const nets = {
+  'test':{
+    host:"https://api.avax-test.network/ext/bc/C/rpc",
+    contract:"0x30fd3f22BD652cE1339922D7701b3D35F13c4E46",
+  },
+  'fuji':{
+    host:"https://api.avax-test.network/ext/bc/C/rpc",
+    contract:"0x30fd3f22BD652cE1339922D7701b3D35F13c4E46",
+  },
+  'avax':{
+    host:"https://api.avax-test.network/ext/bc/C/rpc",
+    contract:"0x30fd3f22BD652cE1339922D7701b3D35F13c4E46",
+  }
+ }
 const doServer = async function (req, res) {
-  const split = req.headers.host.split('.')
+  console.log('connection');
+  const split = req.headers.host.split('.');
+  let host = nets['avax'];
+
+  if(split.length > 2 && Object.keys(nets).includes(split[split.length-3])) {
+    host = nets[split[split.length-3]];
+    split.pop();
+  }
+  if(split.length > 1 && Object.keys(nets).includes(split[split.length-2])) {
+    host = nets[split[split.length-2]];
+  }
+
   split.splice(1, 2);
   const name = split.join('.')
+
   if (name.length != 32) {
     if (name == 'exists') {
       console.log(req.url);
       let lookupRes = 'false';
       try {
-        await lookup(req.url.replace('/', ''));
+        console.log({host});
+        await lookup(req.url.replace('/', ''), req.headers.host, host.host, host.contract);
         lookupRes = 'true';
       } catch { }
       res.writeHead(200, {
@@ -77,7 +104,7 @@ const doServer = async function (req, res) {
       return;
     }
   }
-  const publicKey = await getKey(name);
+  const publicKey = await getKey(name, req.headers.host, host.host, host.contract);
   console.log({publicKey})
   if (!tunnels[publicKey]) {
     const port = 1337 + ((mod++) % 1000);
@@ -129,6 +156,6 @@ server.on('upgrade', doUpgrade);
 sserver.on('upgrade', doUpgrade);
 
 process.stdout.on('error', console.error);
-console.log("listening on port 8081")
+
 server.listen(80);
 sserver.listen(443);
