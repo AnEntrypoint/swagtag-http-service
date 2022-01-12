@@ -53,15 +53,18 @@ const getKey = async(name, question, contract, host)=>{
 const nets = {
   'test':{
     host:"https://api.avax-test.network/ext/bc/C/rpc",
+    prefix: 'https://domains.fuji.avax.ga/#',
     contract:"0x30fd3f22BD652cE1339922D7701b3D35F13c4E46",
   },
   'fuji':{
     host:"https://api.avax-test.network/ext/bc/C/rpc",
+    prefix: 'https://domains.fuji.avax.ga/#',
     contract:"0x30fd3f22BD652cE1339922D7701b3D35F13c4E46",
   },
   'avax':{
-    host:"https://api.avax-test.network/ext/bc/C/rpc",
-    contract:"0x30fd3f22BD652cE1339922D7701b3D35F13c4E46",
+    host:"https://api.avax.network/ext/bc/C/rpc",
+    prefix: 'https://domains.avax.ga/#',
+    contract:"0x1B96Ae207FaB2BAbfE5C8bEc447E60503cD99200",
   }
  }
 const doServer = async function (req, res) {
@@ -76,7 +79,6 @@ const doServer = async function (req, res) {
   if(split.length > 1 && Object.keys(nets).includes(split[split.length-2])) {
     host = nets[split[split.length-2]];
   }
-
   split.splice(1, 2);
   const name = split.join('.')
 
@@ -85,9 +87,7 @@ const doServer = async function (req, res) {
       console.log(req.url);
       let lookupRes = 'false';
       try {
-        console.log({host});
-        await lookup(req.url.replace('/', ''), req.headers.host, host.host, host.contract);
-        lookupRes = 'true';
+        lookupRes = (await lookup(req.url.replace('/', ''), req.headers.host, host.host, host.contract)).toString();
       } catch { }
       res.writeHead(200, {
         'Content-Type': 'text/plain',
@@ -137,17 +137,29 @@ const doServer = async function (req, res) {
 }
 
 const options = {
-  key: fs.readFileSync('key.pem'),
-  cert: fs.readFileSync('cert.pem')
+  key: fs.readFileSync('fuji.key.pem'),
+  cert: fs.readFileSync('fuji.cert.pem')
 };
 var server = http.createServer(doServer);
 var sserver = https.createServer(options, doServer);
 
 const doUpgrade = async function (req, socket, head) {
-  const split = req.headers.host.split('.')
+  console.log('connection');
+  const split = req.headers.host.split('.');
+  let host = nets['avax'];
+
+  if(split.length > 2 && Object.keys(nets).includes(split[split.length-3])) {
+    host = nets[split[split.length-3]];
+    split.pop();
+  }
+  if(split.length > 1 && Object.keys(nets).includes(split[split.length-2])) {
+    host = nets[split[split.length-2]];
+  }
+
   split.splice(1, 2);
-  const name = split.join('.')
-  const publicKey = await getKey(name);
+  let name = split.join('.')
+
+  const publicKey = await getKey(name, req.headers.host, host.host, host.contract);
   proxy.ws(req, socket, {
     target: 'http://127.0.0.1:' + tunnels[publicKey]
   }, socket.end);

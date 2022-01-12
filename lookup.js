@@ -42,8 +42,10 @@ module.exports = async (outname, question, net, contract) => {
     
   const update = async () => {
     let address = await nets[net].contract.methods
-    .getAddress(outname.toLowerCase())
+    .getAddress(nets[net].prefix+outname.toLowerCase())
     .call();
+    if(!address) address = await nets[net].contract.methods.getAddress(outname.toLowerCase()).call();
+
     if (address.startsWith("tun:")) {
       let addressout = address.split(':');
       const out = addressout.pop();
@@ -51,7 +53,7 @@ module.exports = async (outname, question, net, contract) => {
       return out;
     } 
     console.log('not found', address)
-    return;
+    return false;
   };
   const cache = nets[net].cache.get(question);
   if (cache) return cache;
