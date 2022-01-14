@@ -53,17 +53,17 @@ const getKey = async(name, question, contract, host)=>{
 const nets = {
   'test':{
     host:"https://api.avax-test.network/ext/bc/C/rpc",
-    prefix: 'https://domains.fuji.avax.ga/#',
+    prefix: 'https://domains.fuji.avax.ga/',
     contract:"0x30fd3f22BD652cE1339922D7701b3D35F13c4E46",
   },
   'fuji':{
     host:"https://api.avax-test.network/ext/bc/C/rpc",
-    prefix: 'https://domains.fuji.avax.ga/#',
+    prefix: 'https://domains.fuji.avax.ga/',
     contract:"0x30fd3f22BD652cE1339922D7701b3D35F13c4E46",
   },
   'avax':{
     host:"https://api.avax.network/ext/bc/C/rpc",
-    prefix: 'https://domains.avax.ga/#',
+    prefix: 'https://domains.avax.ga/',
     contract:"0x1B96Ae207FaB2BAbfE5C8bEc447E60503cD99200",
   }
  }
@@ -85,7 +85,26 @@ const doServer = async function (req, res) {
 
   if (name.length != 32) {
     console.log({name});
-    if (name === 'exists') {
+    if (name === 'domains') {
+      let lookupRes = false;
+      try {
+        lookupRes = (await lookup(req.url.split('/')[1], req.headers.host, host.host, host.contract, host.prefix, true)).toString();
+      } catch(e) { console.error(e) }
+      if(lookupRes) {
+        res.writeHead(200, {
+          'Content-Type': 'text/plain',
+          'Access-Control-Allow-Origin': '*'
+        });
+        res.end(lookupRes);
+      } else {
+        res.writeHead(404, {
+          'Content-Type': 'text/plain',
+          'Access-Control-Allow-Origin': '*'
+        });
+        res.end('not found');
+      }
+      return;
+    } if (name === 'exists') {
       let lookupRes = 'false';
       try {
         lookupRes = (await lookup(req.url.replace('/', ''), req.headers.host, host.host, host.contract, host.prefix, true)).toString();
