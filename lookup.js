@@ -30,8 +30,8 @@ const ABI = [
 ];
 
 const ips = {};
-module.exports = async (outname, question, net, contract) => {
-  console.log({net, contract});
+module.exports = async (outname, question, net, contract, prefix, any) => {
+  console.log({outname, net, contract});
   if(!net) return;
   if(!nets[net]) {
     nets[net] = [];
@@ -42,18 +42,11 @@ module.exports = async (outname, question, net, contract) => {
     
   const update = async () => {
     let address = await nets[net].contract.methods
-    .getAddress(nets[net].prefix+outname.toLowerCase())
+    .getAddress(prefix+outname.toLowerCase())
     .call();
     if(!address) address = await nets[net].contract.methods.getAddress(outname.toLowerCase()).call();
-
-    if (address.startsWith("tun:")) {
-      let addressout = address.split(':');
-      const out = addressout.pop();
-      nets[net].cache.set(question, out);
-      return out;
-    } 
-    console.log('not found', address)
-    return false;
+    if(address && any) return address;
+    return JSON.parse(address);
   };
   const cache = nets[net].cache.get(question);
   if (cache) return cache;

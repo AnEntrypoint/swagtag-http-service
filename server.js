@@ -43,7 +43,7 @@ const getKey = async(name, question, contract, host)=>{
   if (decoded.length == 32) {
     publicKey = Buffer.from(decoded);
   } else {
-    const lookupRes = await lookup(name, question, contract, host)||'';
+    const lookupRes = await lookup(name, question, contract, host, host.prefix)||'';
     console.log(lookupRes);
     publicKey = Buffer.from(b32.decode.asBytes(lookupRes.toUpperCase()));
   }
@@ -69,6 +69,7 @@ const nets = {
  }
 const doServer = async function (req, res) {
   console.log('connection');
+  if(!req.headers.host) return;
   const split = req.headers.host.split('.');
   let host = nets['avax'];
 
@@ -83,17 +84,17 @@ const doServer = async function (req, res) {
   const name = split.join('.')
 
   if (name.length != 32) {
-    if (name == 'exists') {
-      console.log(req.url);
+    console.log({name});
+    if (name === 'exists') {
       let lookupRes = 'false';
       try {
-        lookupRes = (await lookup(req.url.replace('/', ''), req.headers.host, host.host, host.contract)).toString();
-      } catch { }
+        lookupRes = (await lookup(req.url.replace('/', ''), req.headers.host, host.host, host.contract, host.prefix, true)).toString();
+      } catch(e) { console.error(e) }
       res.writeHead(200, {
         'Content-Type': 'text/plain',
         'Access-Control-Allow-Origin': '*'
       });
-      res.end(lookupRes);
+      res.end((!(!lookupRes)).toString());
       return;
     } else if (name == 'txt') {
       res.writeHead(200, {
