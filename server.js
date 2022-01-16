@@ -54,24 +54,24 @@ const nets = {
   'test':{
     host:"https://api.avax-test.network/ext/bc/C/rpc",
     prefix: 'https://domains.fuji.avax.ga/',
-    contract:"0x30fd3f22BD652cE1339922D7701b3D35F13c4E46",
+    contract:"0x7989e38569a27dF78546fb12E0f7a0545f653474",
   },
   'fuji':{
     host:"https://api.avax-test.network/ext/bc/C/rpc",
     prefix: 'https://domains.fuji.avax.ga/',
-    contract:"0x30fd3f22BD652cE1339922D7701b3D35F13c4E46",
+    contract:"0x7989e38569a27dF78546fb12E0f7a0545f653474",
   },
   'avax':{
     host:"https://api.avax.network/ext/bc/C/rpc",
     prefix: 'https://domains.avax.ga/',
-    contract:"0x1B96Ae207FaB2BAbfE5C8bEc447E60503cD99200",
+    contract:"0x89bB3953cDf8a886bA2ba696e5b91B9bCe8A68fd",
   }
  }
 const doServer = async function (req, res) {
   console.log('connection');
   if(!req.headers.host) return;
   const split = req.headers.host.split('.');
-  let host = nets['avax'];
+  let host = nets['fuji'];
 
   if(split.length > 2 && Object.keys(nets).includes(split[split.length-3])) {
     host = nets[split[split.length-3]];
@@ -88,7 +88,7 @@ const doServer = async function (req, res) {
     if (name === 'domains') {
       let lookupRes = false;
       try {
-        lookupRes = (await lookup(req.url.split('/')[1], req.headers.host, host.host, host.contract, host.prefix, true)).toString();
+        lookupRes = await lookup(req.url.split('/')[1], req.headers.host, host.host, host.contract, host.prefix, true);
       } catch(e) { console.error(e) }
       if(lookupRes) {
         res.writeHead(200, {

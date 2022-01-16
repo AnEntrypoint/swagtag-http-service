@@ -44,7 +44,8 @@ module.exports = async (outname, question, net, contract, prefix, any) => {
     let address = await nets[net].contract.methods.getAddress(prefix+outname.toLowerCase()).call();
     if(!address) address = await nets[net].contract.methods.getAddress(prefix+'#'+outname.toLowerCase()).call();
     if(address && any) return address;
-    return JSON.parse(address);
+    console.log({address});
+    return address||'{}';
   };
   const cache = nets[net].cache.get(question);
   if (cache) return cache;
