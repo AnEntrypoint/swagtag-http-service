@@ -36,16 +36,15 @@ const closeOther = (local, other) => {
   local.on('end',  () => { other.end() })
 }
 
-const getKey = async(name, question, contract, host)=>{
+const getKey = async(name, question, contract, host, prefix)=>{
   let publicKey;
   let decoded = '';
   try {decoded = b32.decode.asBytes(name.toUpperCase())} catch (e) { }
   if (decoded.length == 32) {
     publicKey = Buffer.from(decoded);
   } else {
-    const lookupRes = await lookup(name, question, contract, host, host.prefix)||'';
-    console.log(lookupRes);
-    publicKey = Buffer.from(b32.decode.asBytes(lookupRes.toUpperCase()));
+    const lookupRes = await lookup(name, question, contract, host, prefix)||'';
+    publicKey = Buffer.from(b32.decode.asBytes(lookupRes.tunnel.toUpperCase()));
   }
   return publicKey;
 }
@@ -54,21 +53,20 @@ const nets = {
   'test':{
     host:"https://api.avax-test.network/ext/bc/C/rpc",
     prefix: 'https://domains.fuji.avax.ga/',
-    contract:"0x7989e38569a27dF78546fb12E0f7a0545f653474",
+    contract:"0xA133510258B8fdf5CcFe7d26aBFeF2D0f93497Bb",
   },
   'fuji':{
     host:"https://api.avax-test.network/ext/bc/C/rpc",
     prefix: 'https://domains.fuji.avax.ga/',
-    contract:"0x7989e38569a27dF78546fb12E0f7a0545f653474",
+    contract:"0xA133510258B8fdf5CcFe7d26aBFeF2D0f93497Bb",
   },
   'avax':{
     host:"https://api.avax.network/ext/bc/C/rpc",
     prefix: 'https://domains.avax.ga/',
-    contract:"0x89bB3953cDf8a886bA2ba696e5b91B9bCe8A68fd",
+    contract:"0xc290698f5E5CdbF881d804f68ceb5b76Ada383Be",
   }
  }
 const doServer = async function (req, res) {
-  console.log('connection');
   if(!req.headers.host) return;
   const split = req.headers.host.split('.');
   let host = nets['fuji'];
@@ -84,7 +82,6 @@ const doServer = async function (req, res) {
   const name = split.join('.')
 
   if (name.length != 32) {
-    console.log({name});
     if (name === 'domains') {
       let lookupRes = false;
       try {
@@ -124,8 +121,7 @@ const doServer = async function (req, res) {
       return;
     }
   }
-  const publicKey = await getKey(name, req.headers.host, host.host, host.contract);
-  console.log({publicKey})
+  const publicKey = await getKey(name, req.headers.host, host.host, host.contract, host.prefix);
   if (!tunnels[publicKey]) {
     const port = 1337 + ((mod++) % 1000);
     try {
@@ -143,8 +139,6 @@ const doServer = async function (req, res) {
         console.trace(e);
         console.error(e);
       }
-      console.log('connection');
-
   } else {
     target = 'http://127.0.0.1:' + tunnels[publicKey]
   }
@@ -157,14 +151,17 @@ const doServer = async function (req, res) {
 }
 
 const options = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem')
+};
+const fuji = {
   key: fs.readFileSync('fuji.key.pem'),
   cert: fs.readFileSync('fuji.cert.pem')
 };
 var server = http.createServer(doServer);
 var sserver = https.createServer(options, doServer);
-
+sserver.addContext('*.fuji.avax.ga', fuji);
 const doUpgrade = async function (req, socket, head) {
-  console.log('connection');
   const split = req.headers.host.split('.');
   let host = nets['avax'];
 
@@ -179,7 +176,7 @@ const doUpgrade = async function (req, socket, head) {
   split.splice(1, 2);
   let name = split.join('.')
 
-  const publicKey = await getKey(name, req.headers.host, host.host, host.contract);
+  const publicKey = await getKey(name, req.headers.host, host.host, host.contract, host.prefix);
   proxy.ws(req, socket, {
     target: 'http://127.0.0.1:' + tunnels[publicKey]
   }, socket.end);

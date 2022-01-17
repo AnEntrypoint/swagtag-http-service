@@ -8,46 +8,44 @@ const { Packet } = require('dns2');
 
 const ABI = [
   {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "_name",
-          "type": "string"
-        }
-      ],
-      "name": "getAddress",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function",
-      "constant": true
-    },
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_name",
+        "type": "string"
+      }
+    ],
+    "name": "getAddress",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
 ];
 
 const ips = {};
 module.exports = async (outname, question, net, contract, prefix, any) => {
-  console.log({outname, net, contract});
-  if(!net) return;
-  if(!nets[net]) {
+  if (!net) return;
+  if (!nets[net]) {
     nets[net] = [];
     const web3 = nets[net].web3 = new Web3(net);
-    nets[net].contract = new web3.eth.Contract(ABI,contract);
+    nets[net].contract = new web3.eth.Contract(ABI, contract);
     nets[net].cache = new NodeCache({ stdTTL: 60 * 60 * 10, checkperiod: 120 });
   }
-    
+
   const update = async () => {
-    let address = await nets[net].contract.methods.getAddress(prefix+outname.toLowerCase()).call();
-    if(!address) address = await nets[net].contract.methods.getAddress(prefix+'#'+outname.toLowerCase()).call();
-    if(address && any) return address;
-    console.log({address});
-    return address||'{}';
+    let address = await nets[net].contract.methods.getAddress(outname.toLowerCase()).call();
+    address = JSON.parse(address);
+    if (address && any) return address;
+    return address || '{}';
   };
   const cache = nets[net].cache.get(question);
   if (cache) return cache;
-  return update()||'';
+  return update() || '';
 };
