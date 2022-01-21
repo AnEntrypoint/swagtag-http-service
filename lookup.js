@@ -41,7 +41,9 @@ module.exports = async (outname, question, net, contract, prefix, any) => {
 
   const update = async () => {
     let address = await nets[net].contract.methods.getAddress(outname.toLowerCase()).call();
-    address = JSON.parse(address);
+    try {
+      address = JSON.parse(address);
+    } catch(e) {}
     if (address && any) return address;
     return address || '{}';
   };

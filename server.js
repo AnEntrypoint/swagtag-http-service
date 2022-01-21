@@ -92,13 +92,13 @@ const doServer = async function (req, res) {
           'Content-Type': 'text/plain',
           'Access-Control-Allow-Origin': '*'
         });
-        res.end(lookupRes);
+        res.end(JSON.stringify(lookupRes));
       } else {
         res.writeHead(404, {
           'Content-Type': 'text/plain',
           'Access-Control-Allow-Origin': '*'
         });
-        res.end('not found');
+        res.end('{\"name\":\"not found\"}');
       }
       return;
     } if (name === 'exists') {
