@@ -11,3 +11,4 @@ letsencrypt/renewal-hooks
 letsencrypt/letsencrypt.log
 txt
 package-lock.json
+.env
