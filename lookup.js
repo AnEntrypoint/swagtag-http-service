@@ -1,10 +1,6 @@
 const Web3 = require("web3");
 const nets = [];
 const NodeCache = require("node-cache");
-const DHT = require("@hyperswarm/dht");
-var base32 = require("hi-base32");
-const node = new DHT();
-const { Packet } = require('dns2');
 
 const ABI = [
   {
@@ -29,7 +25,6 @@ const ABI = [
   },
 ];
 
-const ips = {};
 module.exports = async (outname, question, net, contract, prefix, any) => {
   if (!net) return;
   if (!nets[net]) {
@@ -43,7 +38,7 @@ module.exports = async (outname, question, net, contract, prefix, any) => {
     let address = await nets[net].contract.methods.getAddress(outname.toLowerCase()).call();
     try {
       address = JSON.parse(address);
-    } catch(e) {}
+    } catch (e) { }
     if (address && any) return address;
     return address || '{}';
   };
